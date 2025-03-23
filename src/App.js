@@ -211,7 +211,6 @@ function Desert({ desert, setCart }) {
             onMouseLeave={() => {
               setShowOrder(false);
               setSelectedDesert(null);
-              setQuantity(0);
             }}
           >
             <div className="circle" onClick={handleDecrement}>

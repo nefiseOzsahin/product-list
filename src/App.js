@@ -141,7 +141,7 @@ export default function App() {
           ) : (
             <>
               <div>
-                <Cart cart={cart} />
+                <Cart cart={cart} setCart={setCart} />
               </div>
               <div className="carbon-container">
                 <img
@@ -211,6 +211,7 @@ function Desert({ desert, setCart }) {
             onMouseLeave={() => {
               setShowOrder(false);
               setSelectedDesert(null);
+              setQuantity(0);
             }}
           >
             <div className="circle" onClick={handleDecrement}>
@@ -236,7 +237,7 @@ function Desert({ desert, setCart }) {
   );
 }
 
-function Cart({ cart }) {
+function Cart({ cart, setCart, setQuantity }) {
   const groupedCart = cart.reduce((acc, item) => {
     const existingItem = acc.find((el) => el.name === item.name);
     if (existingItem) {
@@ -247,12 +248,28 @@ function Cart({ cart }) {
     return acc;
   }, []);
 
+  function cancel(cancelItem) {
+    setCart((prev) => prev.filter((dessert) => dessert.id !== cancelItem.id));
+  }
+
   return (
     <div>
       {groupedCart.map((item) => (
-        <p key={item.name}>
-          {item.quantity}x {item.name} ${item.price * item.quantity}
-        </p>
+        <div className="order-item" key={item.id}>
+          <div>
+            <h4>{item.name}</h4>
+            <p key={item.name}>
+              <span className="summary-quantity"> {item.quantity}x </span>
+              <span className="summary-price">@${item.price.toFixed(2)}</span>
+              <span className="summary-total-price">
+                ${(item.price * item.quantity).toFixed(2)}
+              </span>
+            </p>
+          </div>
+          <div className="close" onClick={() => cancel(item)}>
+            x
+          </div>
+        </div>
       ))}
     </div>
   );

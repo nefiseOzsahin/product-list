@@ -113,6 +113,35 @@ const data = [
 
 export default function App() {
   const [cart, setCart] = useState([]);
+  const [quantities, setQuantities] = useState({}); // Tatlıların miktarları
+
+  function handleIncrement(dessert) {
+    setQuantities((prev) => ({
+      ...prev,
+      [dessert.id]: (prev[dessert.id] || 0) + 1,
+    }));
+
+    setCart((prev) => [...prev, dessert]); // Sepete ekleme
+  }
+
+  function handleDecrement(dessert) {
+    //if (quantity === 0) return;
+    if (!quantities[dessert.id] || quantities[dessert.id] === 0) return;
+    //setQuantity((prev) => Math.max(prev - 1, 0));
+    setQuantities((prev) => ({
+      ...prev,
+      [dessert.id]: Math.max(prev[dessert.id] - 1, 0),
+    }));
+    setCart((prev) => {
+      const index = prev.findIndex((item) => item.id === dessert.id);
+      if (index !== -1) {
+        const newCart = [...prev];
+        newCart.splice(index, 1); //belirtilen index konumundaki 1 öğeyi siliyor.
+        return newCart;
+      }
+      return prev;
+    });
+  }
 
   return (
     <div>
@@ -121,7 +150,14 @@ export default function App() {
           <h1 className="main-header">Desserts</h1>
           <div className="desert-container">
             {data.map((desert) => (
-              <Desert desert={desert} key={desert.id} setCart={setCart} />
+              <Desert
+                desert={desert}
+                key={desert.id}
+                setCart={setCart}
+                quantities={quantities}
+                handleDecrement={handleDecrement}
+                handleIncrement={handleIncrement}
+              />
             ))}
           </div>
         </div>
@@ -141,7 +177,11 @@ export default function App() {
           ) : (
             <>
               <div>
-                <Cart cart={cart} setCart={setCart} />
+                <Cart
+                  cart={cart}
+                  setCart={setCart}
+                  setQuantities={setQuantities}
+                />
               </div>
               <div className="carbon-container">
                 <img
@@ -162,39 +202,32 @@ export default function App() {
   );
 }
 
-function Desert({ desert, setCart }) {
+function Desert({
+  desert,
+  setCart,
+  quantities,
+  handleDecrement,
+  handleIncrement,
+}) {
   const [showOrder, setShowOrder] = useState(false);
-  const [selectedDesert, setSelectedDesert] = useState(null);
-  const [quantity, setQuantity] = useState(0);
-
-  function handleDecrement() {
-    if (quantity === 0) return;
-    setQuantity((prev) => Math.max(prev - 1, 0));
-    setCart((prev) => {
-      const index = prev.findIndex((item) => item.id === selectedDesert.id);
-      if (index !== -1) {
-        const newCart = [...prev];
-        newCart.splice(index, 1); //belirtilen index konumundaki 1 öğeyi siliyor.
-        return newCart;
-      }
-      return prev;
-    });
-  }
-
-  function handleIncrement() {
-    setQuantity((prev) => prev + 1);
-    setCart((prev) => [...prev, selectedDesert]);
-  }
+  const [showBorder, setShowBorder] = useState(false);
+  console.log(quantities[desert.id] || 0);
   return (
     <div className="desert">
       <div className="desert-head">
-        <img src={desert.image.desktop} alt={desert.title} />
+        <img
+          src={desert.image.desktop}
+          alt={desert.title}
+          className={showBorder ? "dessert-image" : ""}
+        />
+
         {!showOrder ? (
           <div
             className="addButton"
             onMouseEnter={() => {
               setShowOrder(true);
-              setSelectedDesert(desert);
+              setShowBorder(true);
+              //setSelectedDesert(desert);
             }}
           >
             <div>
@@ -210,17 +243,17 @@ function Desert({ desert, setCart }) {
             className="order"
             onMouseLeave={() => {
               setShowOrder(false);
-              setSelectedDesert(null);
+              setShowBorder(false);
             }}
           >
-            <div className="circle" onClick={handleDecrement}>
+            <div className="circle" onClick={() => handleDecrement(desert)}>
               <img
                 src="/assets/images/icon-decrement-quantity.svg"
                 alt="decrement icon"
               ></img>
             </div>
-            <div className="quantity">{quantity}</div>
-            <div className="circle" onClick={handleIncrement}>
+            <div className="quantity">{quantities[desert.id] || 0}</div>
+            <div className="circle" onClick={() => handleIncrement(desert)}>
               <img
                 src="/assets/images/icon-increment-quantity.svg"
                 alt="decrement icon"
@@ -236,7 +269,10 @@ function Desert({ desert, setCart }) {
   );
 }
 
-function Cart({ cart, setCart, setQuantity }) {
+function AddCart() {
+  return <div></div>;
+}
+function Cart({ cart, setCart, setQuantities }) {
   const groupedCart = cart.reduce((acc, item) => {
     const existingItem = acc.find((el) => el.name === item.name);
     if (existingItem) {
@@ -249,6 +285,10 @@ function Cart({ cart, setCart, setQuantity }) {
 
   function cancel(cancelItem) {
     setCart((prev) => prev.filter((dessert) => dessert.id !== cancelItem.id));
+    setQuantities((prev) => ({
+      ...prev,
+      [cancelItem.id]: 0,
+    }));
   }
 
   return (

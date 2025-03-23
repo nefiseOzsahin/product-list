@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { use, useState } from "react";
 
 const data = [
   {
@@ -112,7 +112,8 @@ const data = [
 ];
 
 export default function App() {
-  const [order, setOrder] = useState([]);
+  const [cart, setCart] = useState([]);
+
   return (
     <div>
       <div className="main-container">
@@ -120,43 +121,139 @@ export default function App() {
           <h1 className="main-header">Desserts</h1>
           <div className="desert-container">
             {data.map((desert) => (
-              <Desert desert={desert} key={desert.id} />
+              <Desert desert={desert} key={desert.id} setCart={setCart} />
             ))}
           </div>
         </div>
         <div className="order-container">
-          <h2 className="empty-order-header">Your Cart(0)</h2>
-          <img
-            src="/assets/images/illustration-empty-cart.svg"
-            alt="empty order image"
-          ></img>
-          <p className="order-empty-message">
-            Your added items will appear here
-          </p>
+          <h2 className="empty-order-header">Your Cart({cart.length})</h2>
+          {cart.length === 0 ? (
+            <>
+              <img
+                src="/assets/images/illustration-empty-cart.svg"
+                alt="empty order image"
+              ></img>
+
+              <p className="order-empty-message">
+                Your added items will appear here
+              </p>
+            </>
+          ) : (
+            <>
+              <div>
+                <Cart cart={cart} />
+              </div>
+              <div className="carbon-container">
+                <img
+                  className="carbon"
+                  src="/assets/images/icon-carbon-neutral.svg"
+                  alt="carbon neutral icon"
+                ></img>
+                <p>
+                  This is a <span className="carbon-text">carbon-neutral</span>{" "}
+                  delivery
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function Desert({ desert }) {
+function Desert({ desert, setCart }) {
+  const [showOrder, setShowOrder] = useState(false);
+  const [selectedDesert, setSelectedDesert] = useState(null);
+  const [quantity, setQuantity] = useState(0);
+
+  function handleDecrement() {
+    if (quantity === 0) return;
+    setQuantity((prev) => Math.max(prev - 1, 0));
+    setCart((prev) => {
+      const index = prev.findIndex((item) => item.id === selectedDesert.id);
+      if (index !== -1) {
+        const newCart = [...prev];
+        newCart.splice(index, 1); //belirtilen index konumundaki 1 öğeyi siliyor.
+        return newCart;
+      }
+      return prev;
+    });
+  }
+
+  function handleIncrement() {
+    setQuantity((prev) => prev + 1);
+    setCart((prev) => [...prev, selectedDesert]);
+  }
   return (
     <div className="desert">
       <div className="desert-head">
         <img src={desert.image.desktop} alt={desert.title} />
-        <div className="addButton">
-          <div>
-            <img
-              src="/assets/images/icon-add-to-cart.svg"
-              alt="icon add to cart"
-            ></img>
+        {!showOrder ? (
+          <div
+            className="addButton"
+            onMouseEnter={() => {
+              setShowOrder(true);
+              setSelectedDesert(desert);
+            }}
+          >
+            <div>
+              <img
+                src="/assets/images/icon-add-to-cart.svg"
+                alt="icon add to cart"
+              ></img>
+            </div>
+            <div>Add to Cart</div>
           </div>
-          <div>Add to Cart</div>
-        </div>
+        ) : (
+          <div
+            className="order"
+            onMouseLeave={() => {
+              setShowOrder(false);
+              setSelectedDesert(null);
+            }}
+          >
+            <div className="circle" onClick={handleDecrement}>
+              <img
+                src="/assets/images/icon-decrement-quantity.svg"
+                alt="decrement icon"
+              ></img>
+            </div>
+            <div className="quantity">{quantity}</div>
+            <div className="circle" onClick={handleIncrement}>
+              <img
+                src="/assets/images/icon-increment-quantity.svg"
+                alt="decrement icon"
+              ></img>
+            </div>
+          </div>
+        )}
       </div>
       <p className="category">{desert.category}</p>
       <p className="desert-name">{desert.name}</p>
       <p className="price">${desert.price.toFixed(2)}</p>
+    </div>
+  );
+}
+
+function Cart({ cart }) {
+  const groupedCart = cart.reduce((acc, item) => {
+    const existingItem = acc.find((el) => el.name === item.name);
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      acc.push({ ...item, quantity: 1 });
+    }
+    return acc;
+  }, []);
+
+  return (
+    <div>
+      {groupedCart.map((item) => (
+        <p key={item.name}>
+          {item.quantity}x {item.name} ${item.price * item.quantity}
+        </p>
+      ))}
     </div>
   );
 }

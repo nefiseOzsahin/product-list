@@ -96,6 +96,36 @@ body {
   align-items: center;
 }
 
+.order {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  width: 12rem;
+  background-color: hsl(14, 86%, 42%);
+  border-radius: 2rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 1rem;
+  cursor: pointer;
+}
+.circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1px solid white;
+
+  background-color: hsl(14, 86%, 42%);
+}
+.circle img {
+  width: 5px;
+  color: white;
+  padding-top: 1rem;
+}
 .category {
   margin-top: 1rem;
   color: hsl(12, 20%, 44%);
@@ -104,6 +134,10 @@ body {
 .order-empty-message {
   color: hsl(7, 20%, 60%);
   font-weight: 700;
+}
+.quantity {
+  background-color: hsl(14, 86%, 42%);
+  color: white;
 }
 
 .desert-name {
@@ -122,6 +156,29 @@ body {
   font-weight: 700;
   font-size: 1.8rem;
 }
+.carbon-container {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  width: 100%;
+  background-color: hsl(20, 50%, 98%);
+  height: 3rem;
+  padding: 1rem;
+  border-radius: 5px;
+  margin-top: 3rem;
+}
+
+.order-container img.carbon {
+  display: inline-flex;
+  height: 2rem;
+  width: 2rem;
+  padding: 0;
+  margin: 0;
+}
+.carbon-text {
+  font-weight: 600;
+}
+
 @media (max-width: 480px) {
   .addButton {
     width: 100%; /* Mobilde buton tam genişlikte olsun */

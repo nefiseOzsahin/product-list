@@ -191,6 +191,7 @@ export default function App() {
           {cart.length === 0 ? (
             <>
               <img
+                className="empty-img"
                 src="/assets/images/illustration-empty-cart.svg"
                 alt="empty order"
               ></img>
@@ -209,17 +210,6 @@ export default function App() {
                   quantities={quantities}
                   setDesserts={setDesserts}
                 />
-              </div>
-              <div className="carbon-container">
-                <img
-                  className="carbon"
-                  src="/assets/images/icon-carbon-neutral.svg"
-                  alt="carbon neutral icon"
-                ></img>
-                <p>
-                  This is a <span className="carbon-text">carbon-neutral</span>{" "}
-                  delivery
-                </p>
               </div>
             </>
           )}
@@ -316,7 +306,9 @@ function Desert({
   );
 }
 
-function Cart({ cart, setCart, setQuantities, quantities, setDesserts }) {
+function Cart({ cart, setCart, setQuantities, setDesserts }) {
+  const [isOrdered, setIsOrdered] = useState(false);
+  const totalPrice = cart.reduce((acc, item) => acc + item.price, 0);
   const groupedCart = cart.reduce((acc, item) => {
     const existingItem = acc.find((el) => el.name === item.name);
     if (existingItem) {
@@ -344,25 +336,116 @@ function Cart({ cart, setCart, setQuantities, quantities, setDesserts }) {
     );
   }
 
+  function handleOrder() {
+    setIsOrdered(true);
+  }
+
+  function handleNewOrder() {
+    setDesserts((prev) =>
+      prev.map((dessert) => ({
+        ...dessert,
+        isOpen: false,
+      }))
+    );
+    setCart([]);
+    setQuantities({});
+  }
+
   return (
     <div>
-      {groupedCart.map((item) => (
-        <div className="order-item" key={item.id}>
-          <div>
-            <h4>{item.name}</h4>
-            <p key={item.name}>
-              <span className="summary-quantity"> {item.quantity}x </span>
-              <span className="summary-price">@${item.price.toFixed(2)}</span>
-              <span className="summary-total-price">
-                ${(item.price * item.quantity).toFixed(2)}
-              </span>
-            </p>
-          </div>
-          <div className="close" onClick={() => cancel(item)}>
-            x
+      <Order
+        groupedCart={groupedCart}
+        cancel={cancel}
+        totalPrice={totalPrice}
+      />
+      <div className="order-button" onClick={handleOrder}>
+        Confirm Order
+      </div>
+      {isOrdered && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <img
+              className="confirm"
+              src="/assets/images/icon-order-confirmed.svg"
+              alt="confirm icon"
+            ></img>
+
+            <div className="order-confirm-container">
+              <h1>Order Confirmed</h1>
+              <p className="wish">We hope you enjoy your food!</p>
+              <OrderSummary groupedCart={groupedCart} totalPrice={totalPrice} />
+              <div className="order-button" onClick={handleNewOrder}>
+                Start New Order
+              </div>
+            </div>
           </div>
         </div>
-      ))}
+      )}
+    </div>
+  );
+}
+
+function Order({ groupedCart, cancel, totalPrice }) {
+  return (
+    <div>
+      <div>
+        {groupedCart.map((item) => (
+          <div className="order-item" key={item.id}>
+            <div>
+              <h4>{item.name}</h4>
+              <div key={item.name} className="order-detail">
+                <div className="summary-quantity"> {item.quantity}x </div>
+                <div className="summary-price">@${item.price.toFixed(2)}</div>
+                <div className="confirm-total-price">
+                  ${(item.price * item.quantity).toFixed(2)}
+                </div>
+              </div>
+            </div>
+            <div className="close" onClick={() => cancel(item)}>
+              x
+            </div>
+          </div>
+        ))}
+        <div className="total">
+          <div>Order Total</div>
+          <div className="total-price">${totalPrice.toFixed(2)}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderSummary({ groupedCart, totalPrice }) {
+  return (
+    <div>
+      <div className="order-summary-styled">
+        {groupedCart.map((item) => (
+          <div className="order-item-summary" key={item.id}>
+            <div>
+              <img
+                src={item.image.thumbnail}
+                alt={item.name}
+                className="order-summary-img"
+              />
+            </div>
+            <div>
+              <h4>{item.name}</h4>
+              <div key={item.name} className="order-detail">
+                <div className="summary-quantity"> {item.quantity}x </div>
+                <div className="summary-price">@${item.price.toFixed(2)}</div>
+              </div>
+            </div>
+
+            <div className="summary-total-price">
+              ${(item.price * item.quantity).toFixed(2)}
+            </div>
+          </div>
+        ))}
+        <div className="total">
+          <div>Order Total</div>
+          <div className="total-price">${totalPrice.toFixed(2)}</div>
+        </div>
+      </div>
     </div>
   );
 }

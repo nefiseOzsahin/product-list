@@ -12,6 +12,7 @@ const data = [
     name: "Waffle with Berries",
     category: "Waffle",
     price: 6.5,
+    isOpen: false,
   },
   {
     id: 2,
@@ -24,6 +25,7 @@ const data = [
     name: "Vanilla Bean Crème Brûlée",
     category: "Crème Brûlée",
     price: 7.0,
+    isOpen: false,
   },
   {
     id: 3,
@@ -36,6 +38,7 @@ const data = [
     name: "Macaron Mix of Five",
     category: "Macaron",
     price: 8.0,
+    isOpen: false,
   },
   {
     id: 4,
@@ -48,6 +51,7 @@ const data = [
     name: "Classic Tiramisu",
     category: "Tiramisu",
     price: 5.5,
+    isOpen: false,
   },
   {
     id: 5,
@@ -60,6 +64,7 @@ const data = [
     name: "Pistachio Baklava",
     category: "Baklava",
     price: 4.0,
+    isOpen: false,
   },
   {
     id: 6,
@@ -72,6 +77,7 @@ const data = [
     name: "Lemon Meringue Pie",
     category: "Pie",
     price: 5.0,
+    isOpen: false,
   },
   {
     id: 7,
@@ -84,6 +90,7 @@ const data = [
     name: "Red Velvet Cake",
     category: "Cake",
     price: 4.5,
+    isOpen: false,
   },
   {
     id: 8,
@@ -96,6 +103,7 @@ const data = [
     name: "Salted Caramel Brownie",
     category: "Brownie",
     price: 4.5,
+    isOpen: false,
   },
   {
     id: 9,
@@ -108,12 +116,14 @@ const data = [
     name: "Vanilla Panna Cotta",
     category: "Panna Cotta",
     price: 6.5,
+    isOpen: false,
   },
 ];
 
 export default function App() {
   const [cart, setCart] = useState([]);
   const [quantities, setQuantities] = useState({}); // Tatlıların miktarları
+  const [desserts, setDesserts] = useState(data);
 
   function handleIncrement(dessert) {
     setQuantities((prev) => ({
@@ -122,6 +132,12 @@ export default function App() {
     }));
 
     setCart((prev) => [...prev, dessert]); // Sepete ekleme
+
+    setDesserts(
+      desserts.map((prev) =>
+        prev.id === dessert.id ? { ...prev, isOpen: true } : prev
+      )
+    );
   }
 
   function handleDecrement(dessert) {
@@ -141,6 +157,14 @@ export default function App() {
       }
       return prev;
     });
+
+    if (!quantities[dessert.id]) {
+      setDesserts(
+        desserts.map((prev) =>
+          prev.id === dessert.id ? { ...prev, isOpen: false } : prev
+        )
+      );
+    }
   }
 
   return (
@@ -149,7 +173,7 @@ export default function App() {
         <div className="main-desert-container">
           <h1 className="main-header">Desserts</h1>
           <div className="desert-container">
-            {data.map((desert) => (
+            {desserts.map((desert) => (
               <Desert
                 desert={desert}
                 key={desert.id}
@@ -157,6 +181,7 @@ export default function App() {
                 quantities={quantities}
                 handleDecrement={handleDecrement}
                 handleIncrement={handleIncrement}
+                setDesserts={setDesserts}
               />
             ))}
           </div>
@@ -167,7 +192,7 @@ export default function App() {
             <>
               <img
                 src="/assets/images/illustration-empty-cart.svg"
-                alt="empty order image"
+                alt="empty order"
               ></img>
 
               <p className="order-empty-message">
@@ -181,6 +206,8 @@ export default function App() {
                   cart={cart}
                   setCart={setCart}
                   setQuantities={setQuantities}
+                  quantities={quantities}
+                  setDesserts={setDesserts}
                 />
               </div>
               <div className="carbon-container">
@@ -204,14 +231,32 @@ export default function App() {
 
 function Desert({
   desert,
-  setCart,
   quantities,
   handleDecrement,
   handleIncrement,
+  setDesserts,
 }) {
   const [showOrder, setShowOrder] = useState(false);
   const [showBorder, setShowBorder] = useState(false);
-  console.log(quantities[desert.id] || 0);
+
+  function handleOpen() {
+    setDesserts((prevDesserts) =>
+      prevDesserts.map((prev) =>
+        prev.id === desert.id ? { ...prev, isOpen: true } : prev
+      )
+    );
+  }
+
+  function handleClose() {
+    if (!quantities[desert.id]) {
+      setDesserts((prevDesserts) =>
+        prevDesserts.map((prev) =>
+          prev.id === desert.id ? { ...prev, isOpen: false } : prev
+        )
+      );
+    }
+  }
+
   return (
     <div className="desert">
       <div className="desert-head">
@@ -221,14 +266,15 @@ function Desert({
           className={showBorder ? "dessert-image" : ""}
         />
 
-        {!showOrder ? (
+        {!desert.isOpen ? (
           <div
             className="addButton"
             onMouseEnter={() => {
-              setShowOrder(true);
+              setShowOrder(handleOpen);
               setShowBorder(true);
               //setSelectedDesert(desert);
             }}
+            onMouseLeave={() => setShowBorder(false)}
           >
             <div>
               <img
@@ -241,8 +287,9 @@ function Desert({
         ) : (
           <div
             className="order"
+            onMouseEnter={() => setShowBorder(true)}
             onMouseLeave={() => {
-              setShowOrder(false);
+              setShowOrder(handleClose);
               setShowBorder(false);
             }}
           >
@@ -269,10 +316,7 @@ function Desert({
   );
 }
 
-function AddCart() {
-  return <div></div>;
-}
-function Cart({ cart, setCart, setQuantities }) {
+function Cart({ cart, setCart, setQuantities, quantities, setDesserts }) {
   const groupedCart = cart.reduce((acc, item) => {
     const existingItem = acc.find((el) => el.name === item.name);
     if (existingItem) {
@@ -289,6 +333,15 @@ function Cart({ cart, setCart, setQuantities }) {
       ...prev,
       [cancelItem.id]: 0,
     }));
+    handleClose(cancelItem);
+  }
+
+  function handleClose(desert) {
+    setDesserts((prevDesserts) =>
+      prevDesserts.map((prev) =>
+        prev.id === desert.id ? { ...prev, isOpen: false } : prev
+      )
+    );
   }
 
   return (
